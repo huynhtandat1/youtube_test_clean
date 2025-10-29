@@ -131,3 +131,28 @@ def test_subscribe_button_present(page: Page):
     page.locator("ytd-video-renderer").first.click()
     subscribe = page.locator("ytd-subscribe-button-renderer, tp-yt-paper-button#subscribe-button")
     expect(subscribe.first).to_be_visible()
+
+def test_click_play_pause_first_video(page: Page):
+    """Click vào video đầu tiên, phát và dừng video."""
+    page.goto("https://www.youtube.com")
+    accept_cookies(page)
+    
+    # Tìm kiếm video
+    page.locator("input#search").fill("music video")
+    page.locator("button#search-icon-legacy").click()
+    
+    # Click vào video đầu tiên
+    page.locator("ytd-video-renderer").first.click()
+    video = page.locator("#movie_player video")
+    expect(video).to_be_visible()
+    
+    # Đợi video load
+    page.wait_for_timeout(2000)
+    
+    # Click vào video để phát
+    page.locator("#movie_player").click()
+    page.wait_for_timeout(3000)  # Đợi video phát 3 giây
+    
+    # Click lần nữa để dừng
+    page.locator("#movie_player").click()
+    page.wait_for_timeout(1000)  # Đợi để xác nhận video đã dừng

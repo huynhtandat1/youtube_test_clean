@@ -23,7 +23,7 @@ def test_youtube_search(page: Page):
         except:
             print("⚠️ Không thấy nút đồng ý, bỏ qua...")
 
-    # 🔍 Chờ và tìm ô tìm kiếm (đa ngôn ngữ)
+    # 🔍 Chờ và tìm ô tìm kiếm
     print("🔍 Chờ thanh tìm kiếm sẵn sàng...")
     search_box = page.locator("input#search")
 
@@ -45,10 +45,42 @@ def test_youtube_search(page: Page):
     page.wait_for_selector("ytd-video-renderer", timeout=20000)
     page.screenshot(path="youtube_results.png")
 
-    # ✅ Kiểm tra kết quả đầu tiên có chứa từ khóa
+    # ✅ Kiểm tra và click video đầu tiên
     first_video = page.locator("ytd-video-renderer").first
     expect(first_video).to_be_visible()
-    print("✅ Đã hiển thị video đầu tiên!")
+    print("✅ Đã hiển thị video đầu tiên! Bắt đầu xem video...")
 
-    print("🎉 Test hoàn tất thành công.")
-    
+    # ▶️ Click vào video đầu tiên
+    first_video.click()
+    page.wait_for_load_state("networkidle")
+    page.screenshot(path="youtube_video_opened.png")
+
+    # 🎬 Chờ video phát
+    print("🎬 Đang xem video...")
+
+    # 👉 Nếu muốn chờ đến khi video kết thúc (ví dụ theo thời lượng hiển thị)
+    try:
+        # Lấy thời lượng video (nếu có)
+        duration_text = page.locator("span.ytp-time-duration").inner_text(timeout=10000)
+        print(f"⏱️ Thời lượng video: {duration_text}")
+
+        # Chuyển thời lượng "12:34" → giây
+        parts = duration_text.split(":")
+        if len(parts) == 2:
+            total_seconds = int(parts[0]) * 60 + int(parts[1])
+        elif len(parts) == 3:
+            total_seconds = int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
+        else:
+            total_seconds = 30  # fallback
+
+        # Giới hạn tối đa 2 phút để tránh test quá lâu
+        watch_time = min(total_seconds, 120)
+        print(f"🕒 Chờ xem video trong {watch_time} giây...")
+        time.sleep(watch_time)
+
+    except Exception as e:
+        print("⚠️ Không lấy được thời lượng video, chờ mặc định 30 giây.")
+        time.sleep(30)
+
+    print("🏁 Hết thời gian xem video. Kết thúc test.")
+    page.screenshot(path="youtube_video_end.png")
